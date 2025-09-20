@@ -1,6 +1,6 @@
 import cohere
 
-co = cohere.Client("Q07zHNvlCuJgmVgy7Fh9uvJSNxgFHZUOpfisiKdq") 
+co = cohere.Client("Replace with your cohere api key") 
 
 def build_prompt(topic, format, length="medium", audience="general"):
     if format == "Blog":
@@ -24,5 +24,6 @@ def gen_content(topic, format="notes", tone="neutral", audience="students"):
         temperature=0.7,
         max_tokens=500
     )
+
 
     return response.text
