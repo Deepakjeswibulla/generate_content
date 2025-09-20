@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Content Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: white;
+            color: #2d3748;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: opacity 0.3s ease;
+        }
+
+        .mobile-menu-toggle.hidden {
+            display: none !important;
+        }
+
+        .mobile-menu-toggle svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .sidebar {
+            width: 270px;
+            background-color: #2d3748;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            position: fixed;   
+            top: 0;
+            left: 0;
+            height: 100vh;     
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+        }
+
+        /* Push content to the right of sidebar */
+        .main-content {
+            margin-left: 270px;   
+            transition: margin-left 0.3s ease;
+        }
+
+        /* Mobile view: sidebar hidden by default, no margin */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        .mobile-close {
+            display: none;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .mobile-close svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .user-profile {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            border-bottom: 1px solid #4a5568;
+            margin-top: 20px;
+        }
+
+        .avatar { 
+            width: 100px; 
+            height: 100px; 
+            border-radius: 50%; 
+            background: url('static/robot.png') center center / cover no-repeat;
+            border: 3px solid #718096; 
+            margin-bottom: 12px; 
+        }
+
+        .user-info h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: white;
+        }
+
+        .user-info p {
+            font-size: 14px;
+            color: #a0aec0;
+        }
+
+        .nav-menu {
+            flex: 1;
+            /* padding: 24px 0; */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .nav-items {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 24px;
+            color: #a0aec0;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 16px;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            background-color: #4a5568;
+            color: white;
+        }
+
+        .nav-item.active {
+            background-color: #d69e2e;
+            color: white;
+        }
+
+        .nav-item.active:hover {
+            background-color: #b7791f;
+        }
+
+        .nav-item.logout {
+            color: #b7791f;
+            /* border-top: 1px solid #4a5568; */
+            margin-top: auto;
+            margin-bottom: 0px;
+        }
+
+        .nav-item.logout:hover {
+            background-color: #b7791f;
+            color: white;
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 42px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .content-form {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #d69e2e;
+        }
+
+        .form-control::placeholder {
+            color: #a0aec0;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .select-control {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23666" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 12px;
+        }
+
+        .select-control option {
+            background-color: white;
+            color: #2d3748;
+            padding: 8px 16px;
+        }
+
+        .select-control option:hover,
+        .select-control option:focus,
+        .select-control option:checked:hover {
+            background-color: #b7791f !important;
+            color: #2d3748 !important;
+            outline: none;
+        }
+
+        /* For Firefox */
+        .select-control option:hover {
+            background: #b7791f !important;
+            color: #2d3748 !important;
+        }
+
+        /* For WebKit browsers */
+        .select-control:focus option:hover {
+            background: linear-gradient(#b7791f, #b7791f) !important;
+            background-color: #b7791f !important;
+            color: #2d3748 !important;
+        }
+
+        .length-options {
+            display: flex;
+            gap: 0;
+            margin-top: 8px;
+        }
+
+        .length-option {
+            flex: 1;
+            padding: 12px 24px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .length-option:first-child {
+            border-radius: 8px 0 0 8px;
+        }
+
+        .length-option:last-child {
+            border-radius: 0 8px 8px 0;
+        }
+
+        .length-option:not(:last-child) {
+            border-right: none;
+        }
+
+        .length-option.active {
+            background-color: #d69e2e;
+            color: white;
+            border-color: #d69e2e;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 16px 32px;
+            background: linear-gradient(135deg, #d69e2e, #b7791f);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 32px;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 16px rgba(214, 158, 46, 0.3);
+        }
+
+        .output-section {
+            margin-top: 32px;
+        }
+
+        .output-label {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 12px;
+        }
+
+        .output-text {
+            padding: 20px;
+            background-color: #f7fafc;
+            border-radius: 8px;
+            border-left: 4px solid #d69e2e;
+            line-height: 1.7;
+            color: #4a5568;
+            font-size: 16px;
+        }
+
+        /* Mobile Overlay */
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        /* Hide second dropdown by default */
+        .sub-options {
+            display: none;
+        }
+
+        .sub-options.show {
+            display: block;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .main-content {
+                padding: 30px;
+            }
+
+            .header h1 {
+                font-size: 36px;
+            }
+
+            .content-form {
+                padding: 24px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                transform: translateX(-100%);
+                z-index: 1000;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .mobile-close {
+                display: block;
+            }
+
+            .mobile-overlay.active {
+                display: block;
+            }
+
+            .main-content {
+                padding: 80px 20px 20px;
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .content-form {
+                padding: 20px;
+            }
+
+            .form-control,
+            .select-control {
+                padding: 14px;
+                font-size: 16px;
+            }
+
+            .length-option {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+
+            .generate-btn {
+                padding: 14px 24px;
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 80px 16px 16px;
+            }
+
+            .content-form {
+                padding: 16px;
+                margin: 0 auto;
+            }
+
+            .form-group label {
+                font-size: 16px;
+            }
+
+            .length-options {
+                flex-direction: column;
+                gap: 2px;
+            }
+
+            .length-option {
+                border-radius: 8px !important;
+                border-right: 2px solid #e2e8f0 !important;
+            }
+
+            .length-option:not(:last-child) {
+                border-bottom: none;
+            }
+
+            .user-profile {
+                padding: 20px;
+            }
+
+            .avatar {
+                width: 50px;
+                height: 50px;
+            }
+
+            .nav-item {
+                padding: 12px 20px;
+                font-size: 15px;
+            }
+
+            .output-text {
+                padding: 16px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .main-content {
+                padding: 80px 12px 12px;
+            }
+
+            .content-form {
+                padding: 12px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+    </button>
+
+    <div class="mobile-overlay" onclick="closeMobileMenu()"></div>
+
+    <div class="sidebar" id="sidebar">
+        <button class="mobile-close" onclick="closeMobileMenu()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+
+        <div class="user-profile">
+            <div class="avatar"></div>
+            <div class="user-info">
+                <h3>ML Coder</h3>
+                <h5>AI-Powered Content Generator</h5>
+            </div>
+        </div>
+        
+        <nav class="nav-menu">
+            <div class="nav-items">
+                <a href="/" class="nav-item active">
+                    <div class="nav-icon">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 2L3 7v11h4v-6h6v6h4V7l-7-5z"/>
+                        </svg>
+                    </div>
+                    Generate Content
+                </a>
+                <a href="/quality_check" class="nav-item">
+                    <div class="nav-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-8.15"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                    </div>
+                    Quality Checker
+                </a>
+                <a href="/history" class="nav-item">
+                    <div class="nav-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2v10l4 4"></path>
+                            <circle cx="12" cy="12" r="10"></circle>
+                        </svg>
+                    </div>
+                    History
+                </a>
+            </div>
+            
+            <button onclick="logout()" class="nav-item logout">
+                <div class="nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 01-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                Logout
+            </button>
+        </nav>
+    </div>
+
+    <main class="main-content">
+        <div class="header">
+            <h1>AI-Powered Content Generator</h1>
+        </div>
+
+        <div class="content-form">
+            <div class="form-group">
+                <label for="topic">Generate Content</label>
+                <input type="text" id="topic" class="form-control" placeholder="Enter a topic here..." value="e.g. Climate Change Awareness">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="content-type">Content Type</label>
+                    <select id="content-type" class="select-control" onchange="updateSubOptions()">
+                        <option value="" disabled selected>Select Type</option>
+                        <option>Blog</option>
+                        <option>Post</option>
+                        <option>Notes</option>
+                        <option>Email</option>
+                        <option>Letter</option>
+                    </select>
+                </div>
+
+                <div class="form-group sub-options" id="sub-options-group">
+                    <label for="sub-options" id="sub-options-label">Options</label>
+                    <select id="sub-options" class="select-control">
+                        <option>Please select content type first</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Content Length</label>
+                <div class="length-options">
+                    <div class="length-option active" onclick="selectLength(this)">Short</div>
+                    <div class="length-option" onclick="selectLength(this)">Medium</div>
+                    <div class="length-option" onclick="selectLength(this)">Long</div>
+                </div>
+            </div>
+
+            <button class="generate-btn" onclick="generate_Content()">Generate Content</button>
+
+            <div class="output-section">
+                <div class="output-label">Generated Content</div>
+                <div class="output-text">
+                    Climate change awareness has risen to a critical level in recent years, as the impacts of global warming become increasingly evident. This awareness involves understanding the causes, consequences, and mitigation strategies associated with climate change. Effective public education campaigns, policy advocacy, and community engagement are essential to promote sustainable practices.
+                </div>
+            </div>
+        </div>
+    </main>
+
+   <script>
+    // Define sub-options for each content type
+    const subOptionsData = {
+        'Blog': {
+            label: 'Audience',
+            options: ['Educational', 'Professional', 'General Public'],
+            defaultOption: 'Educational'
+        },
+        'Post': {
+            label: 'Platform',
+            options: ['Instagram', 'Facebook', 'LinkedIn', 'Twitter']
+        },
+        'Notes': {
+            label: 'Type',
+            options: ['School', 'College', 'Research']
+        },
+        'Email': {
+            label: 'Style',
+            options: ['Casual', 'Professional', 'Friendly']
+        },
+        'Letter': {
+            label: 'Style',
+            options: ['Official', 'Formal', 'Casual']
+        }
+    };
+
+    function updateSubOptions() {
+        const contentType = document.getElementById('content-type').value;
+        const subOptionsGroup = document.getElementById('sub-options-group');
+        const subOptionsLabel = document.getElementById('sub-options-label');
+        const subOptionsSelect = document.getElementById('sub-options');
+
+        // If no content type is selected (empty value), hide sub-options
+        if (!contentType || contentType === '') {
+            subOptionsGroup.classList.remove('show');
+            return;
+        }
+
+        if (subOptionsData[contentType]) {
+            // Show sub-options dropdown
+            subOptionsGroup.classList.add('show');
+
+            // Update label
+            subOptionsLabel.textContent = subOptionsData[contentType].label;
+
+            // Clear existing options
+            subOptionsSelect.innerHTML = '';
+
+            // Add new options
+            subOptionsData[contentType].options.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.textContent = option;
+                optionElement.value = option;
+
+                // Set default selection
+                if (subOptionsData[contentType].defaultOption && option === subOptionsData[contentType].defaultOption) {
+                    optionElement.selected = true;
+                }
+
+                subOptionsSelect.appendChild(optionElement);
+            });
+        } else {
+            // Hide sub-options dropdown for other types that don't have sub-options
+            subOptionsGroup.classList.remove('show');
+        }
+    }
+
+    function selectLength(element) {
+        // Remove active class from all length options
+        document.querySelectorAll('.length-option').forEach(option => {
+            option.classList.remove('active');
+        });
+        // Add active class to clicked option
+        element.classList.add('active');
+    }
+
+    async function generate_Content() {
+        const topic = document.getElementById('topic').value;
+        const contentType = document.getElementById('content-type').value;
+        const length = document.querySelector('.length-option.active').textContent;
+
+        let subOption = '';
+        const subOptionsGroup = document.getElementById('sub-options-group');
+        if (subOptionsGroup.classList.contains('show')) {
+            subOption = document.getElementById('sub-options').value;
+        }
+
+        const outputText = document.querySelector('.output-text');
+
+        // Set loading state
+        outputText.innerHTML = `<p>Generating ${length.toLowerCase()} ${contentType.toLowerCase()} content...</p>`;
+
+        try {
+            const response = await fetch('/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    topic: topic,
+                    content_type: contentType,
+                    length: length,
+                    audience: subOption
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                outputText.innerHTML = data.content;
+            } else {
+                outputText.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+            }
+
+        } catch (error) {
+            console.error('Error:', error);
+            outputText.innerHTML = '<p style="color: red;">Failed to generate content. Please try again.</p>';
+        }
+    }
+
+    function selectLength(element) {
+        // Remove active class from all length options
+        document.querySelectorAll('.length-option').forEach(option => {
+            option.classList.remove('active');
+        });
+        // Add active class to clicked option
+        element.classList.add('active');
+    }
+
+    function logout() {
+        // You can add your logout logic here
+        // For example: redirect to login page
+        // window.location.href = 'login.html';
+        console.log('User logged out');
+    }
+
+    // Initialize everything when page loads
+    window.addEventListener('DOMContentLoaded', () => {
+        updateSubOptions();
+    });
+
+    function toggleMobileMenu() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.querySelector('.mobile-overlay');
+        const toggle = document.querySelector('.mobile-menu-toggle');
+
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+        toggle.classList.toggle('hidden');
+    }
+
+    function closeMobileMenu() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.querySelector('.mobile-overlay');
+        const toggle = document.querySelector('.mobile-menu-toggle');
+
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+        toggle.classList.remove('hidden');
+    }
+
+    // Handle nav links
+    document.querySelectorAll('.nav-item:not(.logout)').forEach(item => {
+        item.addEventListener('click', function(e) {
+            // Only block navigation if href="#"
+            if (this.getAttribute('href') === "#") {
+                e.preventDefault();
+            }
+
+            // Update active class
+            document.querySelectorAll('.nav-item:not(.logout)').forEach(navItem => {
+                navItem.classList.remove('active');
+            });
+            this.classList.add('active');
+
+            // Close mobile menu
+            closeMobileMenu();
+        });
+    });
+
+    // Auto-highlight based on current page
+    window.addEventListener('DOMContentLoaded', () => {
+        const currentPage = window.location.pathname.split("/").pop() || 'main.html';
+        const targetPage = currentPage === '' ? 'main.html' : currentPage;
+        document.querySelectorAll('.nav-item').forEach(item => {
+            const itemHref = item.getAttribute('href').split("/").pop() || 'main.html';
+            if (itemHref === targetPage) {
+                item.classList.add('active');
+            } else {
+                 item.classList.remove('active');
+            }
+        });
+
+        // Initialize sub-options on page load
+        updateSubOptions();
+    });
+
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', function(e) {
+        const sidebar = document.getElementById('sidebar');
+        const toggle = document.querySelector('.mobile-menu-toggle');
+
+        if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
+            closeMobileMenu();
+        }
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+            closeMobileMenu();
+        }
+    });
+</script>
+
+</body>
+</html>

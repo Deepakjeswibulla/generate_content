@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Quality Checker - History</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: white;
+            color: #2d3748;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: opacity 0.3s ease;
+        }
+
+        .mobile-menu-toggle.hidden {
+            display: none !important;
+        }
+
+        .mobile-menu-toggle svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .sidebar {
+            width: 270px;
+            background-color: #2d3748;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            position: fixed;   
+            top: 0;
+            left: 0;
+            height: 100vh;     
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+        }
+
+        /* Push content to the right of sidebar */
+        .main-content {
+            margin-left: 270px;   
+            transition: margin-left 0.3s ease;
+        }
+
+        /* Mobile view: sidebar hidden by default, no margin */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        .mobile-close {
+            display: none;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .mobile-close svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .user-profile {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            border-bottom: 1px solid #4a5568;
+            margin-top: 20px;
+        }
+
+        .avatar { 
+            width: 100px; 
+            height: 100px; 
+            border-radius: 50%; 
+            background: url('static/robot.png') center center / cover no-repeat;
+            border: 3px solid #718096; 
+            margin-bottom: 12px; 
+        }
+
+        .user-info h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: white;
+        }
+
+        .user-info p {
+            font-size: 14px;
+            color: #a0aec0;
+        }
+
+        .nav-menu {
+            flex: 1;
+            /* padding: 24px 0; */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .nav-items {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 24px;
+            color: #a0aec0;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 16px;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            background-color: #4a5568;
+            color: white;
+        }
+
+        .nav-item.active {
+            background-color: #d69e2e;
+            color: white;
+        }
+
+        .nav-item.active:hover {
+            background-color: #b7791f;
+        }
+
+        .nav-item.logout {
+            color: #b7791f;
+            /* border-top: 1px solid #4a5568; */
+            margin-top: auto;
+            margin-bottom: 0px;
+        }
+
+        .nav-item.logout:hover {
+            background-color: #b7791f;
+            color: white;
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 42px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .content-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        /* New styles for history list */
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .history-item {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 24px;
+            background-color: #fafafa;
+        }
+
+        .history-item h3 {
+            font-size: 20px;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .history-meta {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 16px;
+        }
+
+        .history-content {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #4a5568;
+        }
+
+        .no-history {
+            text-align: center;
+            color: #718096;
+            font-style: italic;
+        }
+        /* Mobile Overlay */
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .main-content {
+                padding: 30px;
+            }
+
+            .header h1 {
+                font-size: 36px;
+            }
+
+            .content-container {
+                padding: 24px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                transform: translateX(-100%);
+                z-index: 1000;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .mobile-close {
+                display: block;
+            }
+
+            .mobile-overlay.active {
+                display: block;
+            }
+
+            .main-content {
+                padding: 80px 20px 20px;
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .content-container {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 80px 16px 16px;
+            }
+
+            .content-container {
+                padding: 16px;
+                margin: 0 auto;
+            }
+
+            .user-profile {
+                padding: 20px;
+            }
+
+            .avatar {
+                width: 50px;
+                height: 50px;
+            }
+
+            .nav-item {
+                padding: 12px 20px;
+                font-size: 15px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .main-content {
+                padding: 80px 12px 12px;
+            }
+
+            .content-container {
+                padding: 12px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+    </button>
+
+    <div class="mobile-overlay" onclick="closeMobileMenu()"></div>
+
+    <div class="sidebar" id="sidebar">
+        <button class="mobile-close" onclick="closeMobileMenu()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+
+        <div class="user-profile">
+            <div class="avatar"></div>
+            <div class="user-info">
+                <h3>ML Coder</h3>
+                <h5>AI-Powered Content Generator</h5>
+            </div>
+        </div>
+        
+        <nav class="nav-menu">
+            <div class="nav-items">
+                <a href="/" class="nav-item">
+                    <div class="nav-icon">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 2L3 7v11h4v-6h6v6h4V7l-7-5z"/>
+                        </svg>
+                    </div>
+                    Generate Content
+                </a>
+                <a href="/quality_check" class="nav-item">
+                    <div class="nav-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-8.15"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                    </div>
+                    Quality Checker
+                </a>
+                <a href="/history" class="nav-item active">
+                    <div class="nav-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2v10l4 4"></path>
+                            <circle cx="12" cy="12" r="10"></circle>
+                        </svg>
+                    </div>
+                    History
+                </a>
+            </div>
+            
+            <button onclick="logout()" class="nav-item logout">
+                <div class="nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 01-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                Logout
+            </button>
+        </nav>
+    </div>
+
+    <main class="main-content">
+        <div class="header">
+            <h1>History</h1>
+        </div>
+
+        <div class="content-container">
+            {% if history %}
+            <div class="history-list">
+                {% for item in history %}
+                <div class="history-item">
+                    <h3>{{ item.topic }}</h3>
+                    <div class="history-meta">
+                        {{ item.content_type }} | {{ item.length }}
+                        {% if item.audience %}
+                        | {{ item.audience }}
+                        {% endif %}
+                    </div>
+                    <div class="history-content">
+                        {{ item.content | safe}}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="no-history">No history to display yet. Generate some content first!</p>
+            {% endif %}
+        </div>
+    </main>
+
+    <script>
+        // --- Navigation and Responsive Menu Functions ---
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.mobile-overlay');
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            toggle.classList.toggle('hidden');
+        }
+
+        function closeMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.mobile-overlay');
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+            toggle.classList.remove('hidden');
+        }
+
+        function logout() {
+            console.log('User logged out');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentPage = window.location.pathname.split("/").pop();
+            const targetPage = currentPage === '' ? 'index.html' : currentPage;
+            document.querySelectorAll('.nav-item').forEach(item => {
+                const itemHref = item.getAttribute('href').split("/").pop();
+                if (itemHref === targetPage) {
+                    item.classList.add('active');
+                } else {
+                     item.classList.remove('active');
+                }
+            });
+        });
+
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
+                closeMobileMenu();
+            }
+        });
+
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                closeMobileMenu();
+            }
+        });
+    </script>
+</body>
+</html>
